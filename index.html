@@ -60,6 +60,31 @@ main{padding:24px 15px 70px}.page{display:none}.page.active{display:block}.panel
 .cloud-card{background:#eef7f7;border-left:5px solid var(--mint);padding:14px;border-radius:12px;margin:12px 0}
 @media(max-width:760px){.auth-body{grid-template-columns:1fr}.auth-pane+ .auth-pane{border-left:0;border-top:1px solid #e3e8ed}}
 
+
+html, body { min-height:100%; }
+body { overflow-y:auto !important; overflow-x:hidden; }
+#authGate{
+  overflow-y:auto !important;
+  align-items:flex-start !important;
+  padding-top:24px !important;
+  padding-bottom:24px !important;
+}
+.auth-shell{
+  max-height:none !important;
+  overflow:visible !important;
+  margin:auto 0 !important;
+}
+.auth-body{
+  min-height:0;
+}
+main{
+  overflow:visible !important;
+}
+@media(max-height:760px){
+  #authGate{align-items:flex-start !important;}
+  .auth-shell{margin-top:0 !important;}
+}
+
 </style></head><body>
 
 <div id="authGate">
