@@ -124,7 +124,7 @@ main{
           <summary><strong>Supabase cloud connection</strong></summary>
           <p class="small-note">Hosted Supabase project: <code>https://mqfsptsvypqsrrtcnyau.supabase.co</code>. No PocketBase, ngrok, or CMD window is required.</p>
           <button class="btn secondary" onclick="testSupabaseConnection()">Test connection</button>
-          <div id="pbConnectionMessage" class="auth-message">Ready to test V11.3 browser connection.</div>
+          <div id="pbConnectionMessage" class="auth-message">Ready to test V12 Learning Corner connection.</div>
         </details>
       </div>
     </div>
@@ -450,41 +450,111 @@ function learningKey(s,t){ return `phoenix_learn_${s}_${t}`; }
 function buildLearningCorner(){
   const s=learnSubject.value, t=+learnTerm.value, d=LEARNING[s][t];
   const done=localStorage.getItem(learningKey(s,t))==='1';
+  const topicBits=d.summary.split(/,| and |;/).map(x=>x.trim()).filter(Boolean);
+  const subjectGuide={
+    'English':{
+      method:['Read the text twice: first for meaning, then for the writer’s choices.','Zoom in on a precise word, image, structural choice or dramatic method.','Explain the effect and link it to character, theme, context or the writer’s purpose.','Build analytical paragraphs using Point → Evidence → Analysis → Link.'],
+      exam:'Avoid retelling the plot. A strong answer explains HOW and WHY a writer creates meaning.',
+      example:'Model analysis: “The writer’s choice is significant because it suggests…, which makes the reader/audience…, and links to the wider idea of…”.'
+    },
+    'Maths':{
+      method:['Write down what the question gives you and what it is asking for.','Choose a method or formula before calculating.','Show every important step, including substitution and units.','Check by estimating, reversing the operation, or substituting your answer back in.'],
+      exam:'Method marks matter. Even when the final answer is wrong, clear working can earn credit.',
+      example:'Worked-method habit: Given → Formula/rule → Substitute → Calculate → Unit → Check.'
+    },
+    'Science':{
+      method:['Start with the scientific idea or law.','Describe what happens using accurate scientific vocabulary.','Explain why it happens using a cause-and-effect chain.','Where relevant, support the explanation with evidence, a variable, equation or particle model.'],
+      exam:'For “explain” questions, do not stop at what happens. Use because/therefore to show the scientific reason.',
+      example:'Model chain: change in X → causes Y → therefore Z is observed. This turns description into explanation.'
+    },
+    'History':{
+      method:['Place the topic in chronological and historical context.','Separate causes, events, consequences and significance.','Use specific evidence rather than vague statements.','For judgements, compare factors and explain which mattered most and why.'],
+      exam:'A judgement needs criteria. “Most important” should mean something clear, such as greatest impact, widest reach or longest-lasting effect.',
+      example:'Model judgement: Factor A was more significant than B because…, although B mattered because…. Overall A had the greater long-term impact because….'
+    },
+    'Geography':{
+      method:['Identify the process, place or issue.','Explain links between physical, human, economic and environmental factors.','Use located examples or case-study evidence when possible.','Evaluate by considering different groups, scales, timescales and trade-offs.'],
+      exam:'Move beyond description: explain the chain of processes and use evidence to support geographical judgement.',
+      example:'Model chain: cause → process → immediate impact → secondary impact → response → evaluation.'
+    },
+    'French':{
+      method:['Learn vocabulary in useful chunks rather than isolated words.','Notice gender, adjective agreement and verb endings.','Build sentences with opinions, reasons, connectives and time phrases.','Check tense accuracy and try to use past, present and future where appropriate.'],
+      exam:'Accuracy first, then variety. A shorter accurate sentence is better than a complicated sentence with uncontrolled grammar.',
+      example:'Upgrade pattern: opinion + reason + time phrase + second tense, e.g. “J’aime… parce que… Hier j’ai… Demain je vais…”.'
+    },
+    'Computer Science':{
+      method:['Define the key concept precisely.','Explain how the process works step by step.','Use a concrete computing example.','Evaluate benefits, limitations, security risks or trade-offs where relevant.'],
+      exam:'Use precise terminology. “It is faster/better” is weak unless you explain what is faster, why, and what the consequence is.',
+      example:'Model explanation: input/data → process/algorithm → output → benefit/limitation → example.'
+    }
+  }[s];
+  const vocabHelp={
+    'gradient':'rate of change of y for each unit increase in x','intercept':'the point where a graph crosses an axis','multiplier':'a number used to increase or decrease an amount proportionally','sample space':'a list or diagram showing all possible outcomes','probability':'a measure from 0 to 1 of how likely an event is',
+    'expression':'a mathematical statement made from numbers, symbols and operations without an equals sign','equation':'a statement that two expressions are equal','HCF':'highest common factor: the largest factor shared by numbers','LCM':'lowest common multiple: the smallest positive multiple shared by numbers','indices':'powers that show repeated multiplication','standard form':'writing a number as a × 10ⁿ where 1 ≤ a < 10',
+    'current':'rate of flow of electric charge','potential difference':'energy transferred per unit charge between two points','resistance':'opposition to the flow of electric current','magnetic field':'region where a magnetic force acts','electromagnet':'a magnet produced by electric current in a coil',
+    'photosynthesis':'process by which plants use light energy to make glucose from carbon dioxide and water','ecosystem':'a community of organisms interacting with each other and their physical environment','glucose':'a simple sugar made in photosynthesis and used in respiration','DNA':'molecule carrying genetic information','gene':'section of DNA that influences a characteristic','variation':'differences between individuals of the same species','natural selection':'process in which better-adapted organisms are more likely to survive and reproduce',
+    'industrialisation':'growth of machine-based factory production and industry','urbanisation':'increase in the proportion of people living in towns and cities','abolition':'ending a system or practice by law','suffrage':'the right to vote','partition':'division of a territory into separate political areas','revolution':'major and often rapid change in political or social organisation',
+    'sustainability':'meeting present needs without preventing future generations from meeting theirs','aquifer':'underground layer of permeable rock that stores groundwater','abstraction':'removal of water from a natural store','recharge':'replacement of water in a groundwater store','scarcity':'when demand for a resource is greater than accessible supply','plate boundary':'place where tectonic plates meet',
+    'perfect tense':'a past tense commonly formed with avoir/être plus a past participle','near future':'aller in the present tense plus an infinitive','negative':'a structure used to say that something does not happen or is not true','adjective agreement':'changing adjective form to match the noun’s gender and number','reflexive verb':'a verb whose action refers back to the subject','imperative':'a verb form used for commands or instructions',
+    'network':'connected devices that can communicate and share resources','router':'device that forwards data between networks','algorithm':'a finite sequence of instructions for solving a problem','selection':'choosing which instructions run according to a condition','iteration':'repeating instructions','cybersecurity':'protecting systems, networks and data from digital attack','HTML':'markup language used to structure webpage content','CSS':'language used to control webpage presentation','binary':'base-2 number system using 0 and 1','hexadecimal':'base-16 number system using 0–9 and A–F','bitmap':'image stored as a grid of pixels','vector':'image represented using mathematical shapes and paths','resolution':'amount of detail represented, often related to pixel dimensions',
+    'theme':'a central idea explored across a text','dramatic irony':'when the audience knows something a character does not','symbolism':'use of an object, image or action to represent a wider idea','patriarchy':'a social system in which men hold most institutional power','context':'circumstances surrounding a text, event or idea','foreshadowing':'hints that suggest what may happen later','soliloquy':'speech in which a character reveals thoughts, usually while alone','tone':'the attitude or emotional quality created by language','atmosphere':'the mood or feeling created for the reader or audience'
+  };
+  const objectives=[`Explain the main ideas in ${d.title}.`,`Use the key vocabulary accurately in speaking and writing.`,`Apply the topic to a Year 8 question rather than only memorising facts.`,`Check your understanding and identify anything to ask your teacher.`];
   learningArea.innerHTML = `
+  <div class="lesson-card" style="margin-bottom:16px">
+    <span class="learn-chip focus">${s}</span><span class="learn-chip">Term ${t}</span><span class="learn-chip">Full Study Lesson</span>
+    <h2 style="margin-bottom:6px">${d.title}</h2>
+    <p><strong>Study time:</strong> about 25–40 minutes for Learn mode. Use the sections below as a mini textbook, not just a checklist.</p>
+    <div class="keybox"><strong>Big picture</strong><p>${d.summary}</p></div>
+    <h3>🎯 Learning objectives</h3><ul>${objectives.map(x=>`<li>${x}</li>`).join('')}</ul>
+  </div>
   <div class="lesson-grid">
     <div class="lesson-card">
-      <span class="learn-chip focus">${s}</span><span class="learn-chip">Term ${t}</span>
-      <h3>${d.title}</h3>
-      <div class="keybox"><strong>Big picture</strong><p>${d.summary}</p></div>
-      <h4>Before school, Phoenix should:</h4>
-      <ul><li>Recognise the five key words.</li><li>Explain the main idea in her own words.</li><li>Think of one question to ask in class.</li></ul>
+      <h3>📖 Learn the topic</h3>
+      <p><strong>${d.title}</strong> brings together several connected Year 8 ideas. Do not learn them as isolated words: understand the relationship between them and practise explaining those links.</p>
+      ${topicBits.map((x,i)=>`<div class="keybox"><strong>${i+1}. ${x.charAt(0).toUpperCase()+x.slice(1)}</strong><p>Study this part carefully. Be able to define or describe <em>${x}</em>, give a relevant example, and explain how it connects to the wider topic of <strong>${d.title}</strong>. After reading, close the notes and explain it aloud in two or three complete sentences.</p></div>`).join('')}
+      <h4>Deep-study method</h4><ol>${subjectGuide.method.map(x=>`<li>${x}</li>`).join('')}</ol>
     </div>
-
     <div class="lesson-card">
-      <h3>Key vocabulary</h3>
-      ${d.vocab.map(v=>`<div class="flashcard" onclick="this.classList.toggle('open')"><strong>${v}</strong><div class="back">Explain this term in your own words and think of an example.</div></div>`).join('')}
-      <small>Tap each card to reveal the learning prompt.</small>
+      <h3>🔑 Key vocabulary — with meanings</h3>
+      ${d.vocab.map(v=>`<div class="flashcard open"><strong>${v}</strong><div class="back">${vocabHelp[v]||`A key ${s} term in this unit. Learn its precise meaning from your class notes, then use it accurately in a complete sentence connected to ${d.title}.`}</div></div>`).join('')}
+      <p><strong>Active recall:</strong> cover the meanings, define each word aloud, then make one sentence using at least two key terms together.</p>
     </div>
-
     <div class="lesson-card">
-      <h3>5-minute preparation</h3>
-      <ol><li>Read the Big Picture.</li><li>Say all five key words aloud.</li><li>Explain two without looking.</li><li>Write one question for the teacher.</li></ol>
-      <textarea id="learnQuestion" placeholder="A question I want to ask in class...">${localStorage.getItem(learningKey(s,t)+'_q')||''}</textarea>
-      <button class="btn secondary" onclick="localStorage.setItem(learningKey('${s}',${t})+'_q',learnQuestion.value)">Save question</button>
+      <h3>🧠 How to think like a ${s} student</h3>
+      <p>${subjectGuide.exam}</p>
+      <div class="keybox"><strong>Worked thinking model</strong><p>${subjectGuide.example}</p></div>
+      <h4>Common mistakes to avoid</h4>
+      <ul><li>Memorising a definition without being able to apply it.</li><li>Giving an answer without explaining the reasoning or evidence.</li><li>Ignoring command words such as <em>explain, compare, evaluate</em> or <em>calculate</em>.</li><li>Finishing without checking accuracy, vocabulary and units/evidence where relevant.</li></ul>
     </div>
-
     <div class="lesson-card">
-      <h3>Readiness Check</h3>
+      <h3>✍️ Guided study</h3>
+      <p><strong>Step 1 — Recall:</strong> Without looking, write three facts or rules from this lesson.</p>
+      <p><strong>Step 2 — Explain:</strong> Choose two key terms and explain the connection between them.</p>
+      <p><strong>Step 3 — Apply:</strong> Create or answer one example that uses the topic in a new situation.</p>
+      <p><strong>Step 4 — Evaluate:</strong> What is the easiest part? What still needs clarification?</p>
+      <textarea id="learnQuestion" rows="5" placeholder="My notes / a question I want to ask in class...">${localStorage.getItem(learningKey(s,t)+'_q')||''}</textarea>
+      <button class="btn secondary" onclick="localStorage.setItem(learningKey('${s}',${t})+'_q',learnQuestion.value); if(typeof scheduleCloudSync==='function') scheduleCloudSync();">Save study notes</button>
+    </div>
+    <div class="lesson-card">
+      <h3>🔥 Challenge</h3>
+      <p>Imagine your teacher asks: <strong>“Explain the most important idea in ${d.title}, then show how it connects to another idea in this unit.”</strong></p>
+      <p>A strong response should use at least <strong>three key terms</strong>, a specific example, and a clear chain of reasoning.</p>
+      <div class="keybox"><strong>Self-check</strong><p>Can you teach this topic to somebody else for two minutes without reading the screen? If not, revisit the section you could not explain.</p></div>
+    </div>
+    <div class="lesson-card">
+      <h3>✅ Readiness check</h3>
       <div class="prequiz"><strong>${d.quiz}</strong>
         ${d.answers.map((a,i)=>`<label class="task"><input type="radio" name="learnquiz" value="${i}"><span>${a}</span></label>`).join('')}
         <button class="btn primary" onclick="checkLearningQuiz(${d.correct})">Check answer</button>
         <div id="learnQuizFeedback" class="feedback"></div>
       </div>
-      <button class="btn ${done?'secondary':'primary'}" onclick="markPrepared('${s}',${t})">${done?'✓ Prepared — undo':'Mark as prepared for school'}</button>
+      <h4>Before marking this lesson prepared, Phoenix should be able to:</h4>
+      <ul><li>Explain the Big Picture without copying it.</li><li>Define at least four of the five key terms.</li><li>Give one worked/example application.</li><li>State one common mistake to avoid.</li></ul>
+      <button class="btn ${done?'secondary':'primary'}" onclick="markPrepared('${s}',${t})">${done?'✓ Prepared — undo':'Mark full lesson as studied'}</button>
     </div>
   </div>`;
 }
-
 function checkLearningQuiz(c){
   const x=document.querySelector('input[name="learnquiz"]:checked');
   learnQuizFeedback.innerHTML=!x
@@ -615,7 +685,7 @@ setTimeout(refreshSaveSummary,300);
 
 
 /* ==========================================================
-   Phoenix Academy V11 — Supabase multi-student cloud sync
+   Phoenix Academy V12 — Supabase multi-student cloud sync
    Supabase:
    - Auth: email/password
    - public.student_profiles
