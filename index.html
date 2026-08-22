@@ -41,7 +41,7 @@ main{padding:24px 15px 70px}.page{display:none}.page.active{display:block}.panel
 .small-note{font-size:.9rem;color:#66758a}
 .backup-box{width:100%;min-height:150px;font-family:monospace}
 
-/* PocketBase multi-student V10 */
+/* Supabase multi-student V11 */
 #authGate{
   position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#26344a,#415a78);
   display:flex;align-items:center;justify-content:center;padding:20px;color:#26344a
@@ -91,7 +91,7 @@ main{
   <div class="auth-shell">
     <div class="auth-head">
       <h2>🔥 Phoenix Academy</h2>
-      <div>Multi-student sign in • private progress • PocketBase cloud sync</div>
+      <div>Multi-student sign in • private progress • Supabase cloud sync</div>
     </div>
     <div class="auth-body">
       <div class="auth-pane">
@@ -121,12 +121,10 @@ main{
         <div class="auth-message" id="registerMessage">Each student gets completely separate progress.</div>
 
         <details class="auth-advanced">
-          <summary><strong>PocketBase connection</strong></summary>
-          <p class="small-note">Current public PocketBase endpoint: <code>https://limes-condense-game.ngrok-free.dev</code>. Keep both PocketBase and ngrok running on the host PC.</p>
-          <input id="pbUrlInput" value="https://limes-condense-game.ngrok-free.dev">
-          <button class="btn secondary" onclick="savePocketBaseUrl()">Save server address</button>
-          <button class="btn secondary" onclick="testPocketBaseConnection()">Test connection</button>
-          <div id="pbConnectionMessage" class="auth-message">Not tested yet.</div>
+          <summary><strong>Supabase cloud connection</strong></summary>
+          <p class="small-note">Hosted Supabase project: <code>https://mqfsptsvypqsrtrcnyau.supabase.co</code>. No Supabase, hosted cloud, or CMD window is required.</p>
+          <button class="btn secondary" onclick="testSupabaseConnection()">Test connection</button>
+          <div id="pbConnectionMessage" class="auth-message">Ready to test.</div>
         </details>
       </div>
     </div>
@@ -194,10 +192,10 @@ main{
 <section id="savecentre" class="page">
   <div class="panel">
     <h2>💾 Save, Cloud Sync & Backup Centre</h2>
-    <p>Work is saved locally for speed and, while signed in, automatically synchronised to the student's private PocketBase account. JSON export/import remains available as an extra backup.</p>
-    <div class="cloud-card"><strong>☁ PocketBase cloud:</strong> <span id="saveCentreCloudStatus">Sign in to enable cloud sync.</span><br>
+    <p>Work is saved locally for speed and, while signed in, automatically synchronised to the student's private Supabase account. JSON export/import remains available as an extra backup.</p>
+    <div class="cloud-card"><strong>☁ Supabase cloud:</strong> <span id="saveCentreCloudStatus">Sign in to enable cloud sync.</span><br>
     <button class="btn primary" style="margin-top:8px" onclick="manualCloudSync()">Sync with cloud now</button></div>
-    <div class="save-status" id="autoSaveStatus">Local auto-save is active; PocketBase cloud sync activates after sign-in.</div>
+    <div class="save-status" id="autoSaveStatus">Local auto-save is active; Supabase cloud sync activates after sign-in.</div>
 
     <div class="save-grid">
       <div class="save-card">
@@ -258,7 +256,12 @@ function key(mode){return mode==='practice'?`practice_${practiceSubject.value}_$
 function saveCurrent(mode){const d={};current[mode].forEach(q=>d[q.id]=answer(q));localStorage.setItem(key(mode),JSON.stringify(d));alert('Saved.')}
 function loadSaved(mode){const d=JSON.parse(localStorage.getItem(key(mode))||'{}');current[mode].forEach(q=>{const a=d[q.id];if(a===undefined)return;if(['short','extended','fill','numeric'].includes(q.type))document.getElementById(q.id).value=a;else q.items.forEach((x,j)=>document.getElementById(q.id+'_'+j).value=a[j]||'')})}
 function renderDashboard(){const d=JSON.parse(localStorage.getItem('phoenixResults')||'{}');dashboardArea.innerHTML=Object.entries(d).length?'<div class="grid">'+Object.entries(d).map(([s,a])=>{const avg=Math.round(a.reduce((x,y)=>x+y.pct,0)/a.length);return `<div class="card"><h3>${s}</h3><p><strong>${avg}% average</strong></p><p>${a.length} tests completed</p><p>Latest: ${a[a.length-1].pct}%</p></div>`}).join('')+'</div>':'<p>No submitted tests yet.</p>'}
-function resetAll(){if(confirm('Delete all saved data?')){localStorage.clear();location.reload()}}
+async function resetAll(){
+  if(!confirm('Delete all saved study progress for the currently signed-in student?')) return;
+  clearPhoenixManagedData();
+  await syncCloudFromLocal();
+  location.reload();
+}
 
 const listeningSets = {
   foundation: [
@@ -612,27 +615,33 @@ setTimeout(refreshSaveSummary,300);
 
 
 /* ==========================================================
-   Phoenix Academy V10.1 — PocketBase + ngrok multi-student cloud sync
-   PocketBase collections expected:
-   students (Auth): display_name, year_group, role, active
-   student_progress (Base): student, data_key, data_value, category
+   Phoenix Academy V11 — Supabase multi-student cloud sync
+   Supabase:
+   - Auth: email/password
+   - public.student_profiles
+   - public.student_progress
+   RLS restricts every student to their own rows.
    ========================================================== */
 
-let PB_URL = localStorage.getItem('pb_url') || 'https://limes-condense-game.ngrok-free.dev';
-let pbToken = localStorage.getItem('pb_auth_token') || '';
-let pbStudent = (() => {
-  try { return JSON.parse(localStorage.getItem('pb_auth_record') || 'null'); }
+const SUPABASE_URL = 'https://mqfsptsvypqsrtrcnyau.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'PASTE_YOUR_SUPABASE_PUBLISHABLE_KEY_HERE';
+
+let sbSession = (() => {
+  try { return JSON.parse(localStorage.getItem('sb_session') || 'null'); }
   catch(e) { return null; }
 })();
-let cloudRecordMap = new Map();
-let cloudApplying = false;
+let sbStudent = (() => {
+  try { return JSON.parse(localStorage.getItem('sb_student_profile') || 'null'); }
+  catch(e) { return null; }
+})();
 let cloudSyncTimer = null;
 let cloudSyncRunning = false;
+let cloudApplying = false;
 let storagePatched = false;
 
 function isManagedProgressKey(k){
   if(!k) return false;
-  if(k.startsWith('pb_')) return false;
+  if(k.startsWith('sb_') || k.startsWith('pb_')) return false;
   if(k === 'phoenix_latest_snapshot') return false;
   return k.startsWith('phoenix') ||
          k.startsWith('practice_') ||
@@ -677,67 +686,52 @@ function setSyncStatus(text, good=true){
   if(top) top.style.opacity=good?'1':'.85';
 }
 
-
-function publicTunnelHeaders(){
-  // ngrok Free shows a browser interstitial for some browser-originated requests.
-  // This documented request header tells ngrok that this is an application/API request.
-  if(/\.ngrok-free\.(app|dev)$/i.test(new URL(PB_URL).hostname)){
-    return {'ngrok-skip-browser-warning':'1'};
-  }
-  return {};
+function sbHeaders(auth=true, extra={}){
+  const h = {
+    'apikey': SUPABASE_PUBLISHABLE_KEY,
+    'Content-Type':'application/json',
+    ...extra
+  };
+  if(auth && sbSession?.access_token) h['Authorization']='Bearer '+sbSession.access_token;
+  return h;
 }
 
-async function pbFetch(path, options={}){
-
-  const headers = Object.assign({'Content-Type':'application/json'}, publicTunnelHeaders(), options.headers||{});
-  if(pbToken) headers['Authorization']=pbToken;
-  const res = await fetch(PB_URL + path, Object.assign({}, options, {headers}));
-  let body=null;
+async function sbRequest(path, options={}, auth=true){
+  if(SUPABASE_PUBLISHABLE_KEY.includes('PASTE_YOUR_')) {
+    throw new Error('Supabase publishable key has not been added to this HTML yet.');
+  }
+  const res=await fetch(SUPABASE_URL+path,{
+    ...options,
+    headers:sbHeaders(auth, options.headers||{})
+  });
   const text=await res.text();
-  if(text){ try{ body=JSON.parse(text); } catch(e){ body=text; } }
+  let body=null;
+  if(text){ try{body=JSON.parse(text)}catch(e){body=text} }
   if(!res.ok){
-    const err=new Error(body?.message || `PocketBase error ${res.status}`);
-    err.status=res.status;
-    err.data=body?.data || {};
-    throw err;
+    const msg=body?.msg || body?.message || body?.error_description || body?.error || `Supabase error ${res.status}`;
+    throw new Error(msg);
   }
   return body;
 }
 
-function friendlyPBError(err){
-  if(err?.data && Object.keys(err.data).length){
-    return Object.entries(err.data).map(([k,v])=>`${k}: ${v?.message||'invalid'}`).join(' • ');
-  }
-  if(err?.message?.includes('Failed to fetch')) return 'Cannot reach PocketBase from this browser. Keep both PocketBase and ngrok running and check the public server address.';
-  return err?.message || 'PocketBase request failed.';
+function friendlySBError(err){
+  if(err?.message?.includes('Failed to fetch')) return 'Cannot reach Supabase from this browser.';
+  return err?.message || 'Supabase request failed.';
 }
 
-async function testPocketBaseConnection(){
-  PB_URL=(document.getElementById('pbUrlInput')?.value||PB_URL).trim().replace(/\/+$/,'');
+async function testSupabaseConnection(){
   const el=document.getElementById('pbConnectionMessage');
   if(el) el.textContent='Testing connection...';
   try{
-    const r=await fetch(PB_URL+'/api/health',{
-      method:'GET',
-      headers:Object.assign({'Accept':'application/json'}, publicTunnelHeaders()),
-      cache:'no-store'
+    if(SUPABASE_PUBLISHABLE_KEY.includes('PASTE_YOUR_')) throw new Error('Publishable key still needs to be added.');
+    const r=await fetch(SUPABASE_URL+'/auth/v1/settings',{
+      headers:{'apikey':SUPABASE_PUBLISHABLE_KEY}
     });
-    const text=await r.text();
-    let body={};
-    try{ body=JSON.parse(text); }catch(e){}
-    if(!r.ok || (body.code && body.code !== 200)) throw new Error(body.message || 'Health check failed');
-    localStorage.setItem('pb_url',PB_URL);
-    if(el) el.innerHTML='<span class="good">✓ Public PocketBase connection is working.</span>';
+    if(!r.ok) throw new Error('Connection test failed');
+    if(el) el.innerHTML='<span class="good">✓ Supabase is reachable. Your PC can be switched off.</span>';
   }catch(e){
-    console.error('PocketBase connection test failed:',e);
-    if(el) el.innerHTML='<span class="bad">✕ Browser/API connection failed. PocketBase may still be online. Check that both PocketBase and ngrok are running, then retry.</span>';
+    if(el) el.innerHTML='<span class="bad">✕ '+friendlySBError(e)+'</span>';
   }
-}
-
-function savePocketBaseUrl(){
-  PB_URL=(document.getElementById('pbUrlInput').value||'').trim().replace(/\/+$/,'');
-  localStorage.setItem('pb_url',PB_URL);
-  document.getElementById('pbConnectionMessage').textContent='Server address saved.';
 }
 
 async function registerStudent(){
@@ -745,106 +739,133 @@ async function registerStudent(){
   const display_name=document.getElementById('registerName').value.trim();
   const email=document.getElementById('registerEmail').value.trim();
   const password=document.getElementById('registerPassword').value;
-  const passwordConfirm=document.getElementById('registerPassword2').value;
+  const password2=document.getElementById('registerPassword2').value;
   const year_group=document.getElementById('registerYear').value;
-  if(!display_name || !email || !password || !passwordConfirm){
+  if(!display_name || !email || !password || !password2){
     msg.innerHTML='<span class="bad">Please complete every field.</span>'; return;
   }
-  if(password !== passwordConfirm){
+  if(password!==password2){
     msg.innerHTML='<span class="bad">Passwords do not match.</span>'; return;
   }
   msg.textContent='Creating account...';
   try{
-    await pbFetch('/api/collections/students/records',{
+    const auth=await sbRequest('/auth/v1/signup',{
       method:'POST',
       body:JSON.stringify({
-        email, password, passwordConfirm,
-        display_name, year_group,
-        role:'student', active:true,
-        emailVisibility:false
+        email,password,
+        data:{display_name,year_group}
+      })
+    },false);
+    if(!auth?.access_token || !auth?.user) throw new Error('Account created but no session was returned. Check that Confirm email is OFF.');
+    sbSession=auth;
+    localStorage.setItem('sb_session',JSON.stringify(sbSession));
+
+    await sbRequest('/rest/v1/student_profiles',{
+      method:'POST',
+      headers:{'Prefer':'return=representation'},
+      body:JSON.stringify({
+        user_id:auth.user.id,
+        display_name,
+        year_group,
+        role:'student',
+        active:true
       })
     });
-    msg.innerHTML='<span class="good">✓ Account created. Signing in...</span>';
-    document.getElementById('loginEmail').value=email;
-    document.getElementById('loginPassword').value=password;
-    await loginStudent();
+
+    sbStudent={user_id:auth.user.id,display_name,year_group,role:'student',active:true,email};
+    localStorage.setItem('sb_student_profile',JSON.stringify(sbStudent));
+    msg.innerHTML='<span class="good">✓ Account created.</span>';
+    await enterStudentSession(true);
   }catch(err){
-    msg.innerHTML='<span class="bad">'+friendlyPBError(err)+'</span>';
+    msg.innerHTML='<span class="bad">'+friendlySBError(err)+'</span>';
   }
 }
 
 async function loginStudent(){
   const msg=document.getElementById('loginMessage');
-  const identity=document.getElementById('loginEmail').value.trim();
+  const email=document.getElementById('loginEmail').value.trim();
   const password=document.getElementById('loginPassword').value;
-  if(!identity || !password){ msg.innerHTML='<span class="bad">Enter email and password.</span>'; return; }
+  if(!email || !password){
+    msg.innerHTML='<span class="bad">Enter email and password.</span>'; return;
+  }
   msg.textContent='Signing in...';
   try{
-    const auth=await pbFetch('/api/collections/students/auth-with-password',{
-      method:'POST',body:JSON.stringify({identity,password})
-    });
-    pbToken=auth.token;
-    pbStudent=auth.record;
-    localStorage.setItem('pb_auth_token',pbToken);
-    localStorage.setItem('pb_auth_record',JSON.stringify(pbStudent));
-    localStorage.setItem('pb_last_student_id',pbStudent.id);
+    const auth=await sbRequest('/auth/v1/token?grant_type=password',{
+      method:'POST',body:JSON.stringify({email,password})
+    },false);
+    sbSession=auth;
+    localStorage.setItem('sb_session',JSON.stringify(sbSession));
+    await loadStudentProfile();
     await enterStudentSession(true);
     msg.innerHTML='<span class="good">✓ Signed in.</span>';
   }catch(err){
-    msg.innerHTML='<span class="bad">'+friendlyPBError(err)+'</span>';
+    msg.innerHTML='<span class="bad">'+friendlySBError(err)+'</span>';
   }
 }
 
-async function refreshStudentAuth(){
-  if(!pbToken || !pbStudent) return false;
+async function refreshSupabaseSession(){
+  if(!sbSession?.refresh_token) return false;
   try{
-    const auth=await pbFetch('/api/collections/students/auth-refresh',{method:'POST',body:'{}'});
-    pbToken=auth.token;
-    pbStudent=auth.record;
-    localStorage.setItem('pb_auth_token',pbToken);
-    localStorage.setItem('pb_auth_record',JSON.stringify(pbStudent));
+    const auth=await sbRequest('/auth/v1/token?grant_type=refresh_token',{
+      method:'POST',
+      body:JSON.stringify({refresh_token:sbSession.refresh_token})
+    },false);
+    sbSession=auth;
+    localStorage.setItem('sb_session',JSON.stringify(sbSession));
     return true;
   }catch(e){ return false; }
 }
 
+async function loadStudentProfile(){
+  const rows=await sbRequest('/rest/v1/student_profiles?select=*&limit=1',{method:'GET'});
+  if(!rows?.length){
+    const u=sbSession?.user;
+    const profile={
+      user_id:u?.id,
+      display_name:u?.user_metadata?.display_name || u?.email?.split('@')[0] || 'Student',
+      year_group:u?.user_metadata?.year_group || 'Year 8',
+      role:'student',
+      active:true
+    };
+    const created=await sbRequest('/rest/v1/student_profiles',{
+      method:'POST',
+      headers:{'Prefer':'return=representation'},
+      body:JSON.stringify(profile)
+    });
+    sbStudent=created?.[0] || profile;
+  }else{
+    sbStudent=rows[0];
+  }
+  sbStudent.email=sbSession?.user?.email || '';
+  localStorage.setItem('sb_student_profile',JSON.stringify(sbStudent));
+}
+
 async function fetchCloudRecords(){
-  const result=await pbFetch('/api/collections/student_progress/records?perPage=500&sort=created');
-  const items=result?.items || [];
-  cloudRecordMap=new Map(items.map(r=>[r.data_key,r]));
-  return items;
+  return await sbRequest('/rest/v1/student_progress?select=*&order=created_at.asc',{method:'GET'});
 }
 
 async function enterStudentSession(afterLogin=false){
   document.getElementById('authGate').style.display='none';
   document.getElementById('studentBar').style.display='flex';
-  const name=pbStudent?.display_name || pbStudent?.email || 'Student';
+  const name=sbStudent?.display_name || sbSession?.user?.email || 'Student';
   document.getElementById('studentWelcome').textContent=`👋 Welcome, ${name}`;
-  if(document.getElementById('pbUrlInput')) document.getElementById('pbUrlInput').value=PB_URL;
   setSyncStatus('☁ Loading your progress…');
-
-  const legacyExists=Object.keys(localProgressObject()).length>0;
-  const legacyClaimed=localStorage.getItem('pb_legacy_claimed')==='1';
 
   try{
     const cloud=await fetchCloudRecords();
-
-    if(cloud.length===0 && legacyExists && !legacyClaimed){
-      // First account on the original device: claim existing V9 local progress as this student's.
-      localStorage.setItem('pb_legacy_claimed','1');
-      await syncCloudFromLocal(false);
-      setSyncStatus('☁ Existing progress moved to your account');
-    }else{
-      // Prevent another student from seeing leftover local data.
-      clearPhoenixManagedData();
-      cloudApplying=true;
-      cloud.forEach(r=>localStorage.setItem(r.data_key,r.data_value ?? ''));
-      cloudApplying=false;
-      refreshAppAfterCloudLoad();
-      setSyncStatus('☁ Progress loaded');
-    }
+    clearPhoenixManagedData();
+    cloudApplying=true;
+    cloud.forEach(r=>{
+      let v=r.data_value;
+      if(typeof v!=='string') v=JSON.stringify(v);
+      localStorage.setItem(r.data_key,v ?? '');
+    });
+    cloudApplying=false;
+    refreshAppAfterCloudLoad();
+    setSyncStatus('☁ Progress loaded');
     patchStorageForCloudSync();
   }catch(err){
-    setSyncStatus('⚠ Local mode — cloud unavailable',false);
+    setSyncStatus('⚠ Local mode — Supabase unavailable',false);
     console.error(err);
   }
 }
@@ -874,76 +895,78 @@ function patchStorageForCloudSync(){
   };
   Storage.prototype.clear=function(){
     if(this!==localStorage) return originalClear.call(this);
-    // Protect authentication/server settings from app-level clear().
     clearPhoenixManagedData();
     if(!cloudApplying) scheduleCloudSync();
   };
 }
 
 function scheduleCloudSync(){
-  if(!pbToken || !pbStudent) return;
+  if(!sbSession?.access_token) return;
   clearTimeout(cloudSyncTimer);
   setSyncStatus('☁ Saving…');
-  cloudSyncTimer=setTimeout(()=>syncCloudFromLocal(false),900);
+  cloudSyncTimer=setTimeout(()=>syncCloudFromLocal(),900);
 }
 
-async function syncCloudFromLocal(forceDelete=false){
-  if(!pbToken || !pbStudent || cloudSyncRunning) return;
+async function syncCloudFromLocal(){
+  if(!sbSession?.access_token || cloudSyncRunning) return;
   cloudSyncRunning=true;
   try{
-    const records=await fetchCloudRecords();
-    const remote=new Map(records.map(r=>[r.data_key,r]));
+    const remote=await fetchCloudRecords();
+    const remoteMap=new Map(remote.map(r=>[r.data_key,r]));
     const local=localProgressObject();
 
-    for(const [key,value] of Object.entries(local)){
-      const payload={student:pbStudent.id,data_key:key,data_value:value,category:progressCategory(key)};
-      const existing=remote.get(key);
-      if(existing){
-        if((existing.data_value ?? '') !== value){
-          const updated=await pbFetch(`/api/collections/student_progress/records/${existing.id}`,{
-            method:'PATCH',body:JSON.stringify(payload)
-          });
-          cloudRecordMap.set(key,updated);
-        }
-      }else{
-        const created=await pbFetch('/api/collections/student_progress/records',{
-          method:'POST',body:JSON.stringify(payload)
-        });
-        cloudRecordMap.set(key,created);
-      }
+    for(const [data_key,data_value] of Object.entries(local)){
+      await sbRequest('/rest/v1/student_progress?on_conflict=student_id,data_key',{
+        method:'POST',
+        headers:{'Prefer':'resolution=merge-duplicates,return=minimal'},
+        body:JSON.stringify({
+          student_id:sbSession.user.id,
+          data_key,
+          data_value,
+          category:progressCategory(data_key)
+        })
+      });
     }
 
-    // Deletions are synced too, so Reset Progress remains per-student and cross-device.
-    for(const [key,record] of remote){
+    for(const [key,row] of remoteMap){
       if(isManagedProgressKey(key) && !(key in local)){
-        await pbFetch(`/api/collections/student_progress/records/${record.id}`,{method:'DELETE'});
-        cloudRecordMap.delete(key);
+        await sbRequest('/rest/v1/student_progress?id=eq.'+encodeURIComponent(row.id),{method:'DELETE'});
       }
     }
 
-    setSyncStatus('☁ Saved '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
+    setSyncStatus('☁ Saved '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
     refreshAppAfterCloudLoad();
   }catch(err){
+    if(err?.message?.toLowerCase().includes('jwt') || err?.message?.toLowerCase().includes('token')){
+      const refreshed=await refreshSupabaseSession();
+      if(refreshed){
+        cloudSyncRunning=false;
+        return syncCloudFromLocal();
+      }
+    }
     setSyncStatus('⚠ Cloud save failed — local copy kept',false);
-    console.error('Cloud sync failed',err);
+    console.error('Supabase cloud sync failed',err);
   }finally{
     cloudSyncRunning=false;
   }
 }
 
 async function manualCloudSync(){
-  if(!pbToken){ document.getElementById('authGate').style.display='flex'; return; }
+  if(!sbSession?.access_token){
+    document.getElementById('authGate').style.display='flex'; return;
+  }
   setSyncStatus('☁ Syncing…');
-  await syncCloudFromLocal(false);
+  await syncCloudFromLocal();
 }
 
 async function logoutStudent(){
-  if(!confirm(`Sign out ${pbStudent?.display_name || 'this student'}?`)) return;
-  try{ await syncCloudFromLocal(false); }catch(e){}
+  if(!confirm(`Sign out ${sbStudent?.display_name || 'this student'}?`)) return;
+  try{ await syncCloudFromLocal(); }catch(e){}
+  try{ await sbRequest('/auth/v1/logout',{method:'POST'}); }catch(e){}
   clearPhoenixManagedData();
-  pbToken=''; pbStudent=null; cloudRecordMap.clear();
-  localStorage.removeItem('pb_auth_token');
-  localStorage.removeItem('pb_auth_record');
+  sbSession=null; sbStudent=null;
+  localStorage.removeItem('sb_session');
+  localStorage.removeItem('sb_student_profile');
   document.getElementById('studentBar').style.display='none';
   document.getElementById('authGate').style.display='flex';
   document.getElementById('loginPassword').value='';
@@ -951,25 +974,30 @@ async function logoutStudent(){
   refreshAppAfterCloudLoad();
 }
 
-async function initialisePocketBaseStudent(){
-  if(document.getElementById('pbUrlInput')) document.getElementById('pbUrlInput').value=PB_URL;
-  if(pbToken && pbStudent){
-    const ok=await refreshStudentAuth();
-    if(ok){ await enterStudentSession(false); return; }
-    pbToken=''; pbStudent=null;
-    localStorage.removeItem('pb_auth_token');
-    localStorage.removeItem('pb_auth_record');
+async function initialiseSupabaseStudent(){
+  if(SUPABASE_PUBLISHABLE_KEY.includes('PASTE_YOUR_')){
+    document.getElementById('authGate').style.display='flex';
+    document.getElementById('pbConnectionMessage').innerHTML='<span class="bad">Supabase publishable key still needs to be added to this HTML.</span>';
+    return;
+  }
+  if(sbSession?.access_token){
+    const ok=await refreshSupabaseSession();
+    if(ok){
+      await loadStudentProfile();
+      await enterStudentSession(false);
+      return;
+    }
+    sbSession=null; sbStudent=null;
+    localStorage.removeItem('sb_session');
+    localStorage.removeItem('sb_student_profile');
   }
   document.getElementById('authGate').style.display='flex';
 }
 
-window.addEventListener('online',()=>{ if(pbToken) manualCloudSync(); });
-window.addEventListener('beforeunload',()=>{ if(pbToken) scheduleCloudSync(); });
-setInterval(()=>{ if(pbToken && navigator.onLine) syncCloudFromLocal(false); },60000);
+window.addEventListener('online',()=>{ if(sbSession?.access_token) manualCloudSync(); });
+setInterval(()=>{ if(sbSession?.access_token && navigator.onLine) syncCloudFromLocal(); },60000);
 
-// Prevent V9 autosnapshot from recursively backing up cloud/auth state.
-const _oldPhoenixStorageEntries = typeof phoenixStorageEntries==='function' ? phoenixStorageEntries : null;
+setTimeout(initialiseSupabaseStudent,100);
 
-setTimeout(initialisePocketBaseStudent,100);
 
 </script></body></html>
