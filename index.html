@@ -41,7 +41,7 @@ main{padding:24px 15px 70px}.page{display:none}.page.active{display:block}.panel
 .small-note{font-size:.9rem;color:#66758a}
 .backup-box{width:100%;min-height:150px;font-family:monospace}
 
-/* Supabase multi-student V11.1 */
+/* Supabase multi-student V11.2 */
 #authGate{
   position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#26344a,#415a78);
   display:flex;align-items:center;justify-content:center;padding:20px;color:#26344a
@@ -124,7 +124,7 @@ main{
           <summary><strong>Supabase cloud connection</strong></summary>
           <p class="small-note">Hosted Supabase project: <code>https://mqfsptsvypqsrtrcnyau.supabase.co</code>. No PocketBase, ngrok, or CMD window is required.</p>
           <button class="btn secondary" onclick="testSupabaseConnection()">Test connection</button>
-          <div id="pbConnectionMessage" class="auth-message">Ready to test.</div>
+          <div id="pbConnectionMessage" class="auth-message">Ready to test V11.2 browser connection.</div>
         </details>
       </div>
     </div>
@@ -722,56 +722,58 @@ function friendlySBError(err){
 async function testSupabaseConnection(){
   const el=document.getElementById('pbConnectionMessage');
   if(el) el.textContent='Testing Supabase Data API...';
+
   try{
-    if(SUPABASE_PUBLISHABLE_KEY.includes('PASTE_YOUR_')) {
+    if(SUPABASE_PUBLISHABLE_KEY.includes('PASTE_YOUR_')){
       throw new Error('Publishable key still needs to be added.');
     }
 
-    const r = await fetch(
-      SUPABASE_URL + '/rest/v1/student_profiles?select=user_id&limit=1',
-      {
-        method:'GET',
-        headers:{
-          'apikey': SUPABASE_PUBLISHABLE_KEY,
-          'Accept':'application/json'
-        },
-        cache:'no-store'
-      }
-    );
+    // Browser-friendly test: put the publishable key in the query string.
+    // This avoids a custom apikey request header and therefore avoids an
+    // unnecessary CORS preflight on this simple connectivity test.
+    const url =
+      SUPABASE_URL +
+      '/rest/v1/student_profiles?select=user_id&limit=1&apikey=' +
+      encodeURIComponent(SUPABASE_PUBLISHABLE_KEY);
+
+    const r = await fetch(url, {
+      method:'GET',
+      headers:{ 'Accept':'application/json' },
+      cache:'no-store'
+    });
 
     const bodyText = await r.text();
 
+    // A normal HTTP reply proves the browser can reach Supabase.
     if(r.ok){
       if(el) el.innerHTML =
         '<span class="good">✓ Supabase Data API is reachable. Your PC can be switched off.</span>';
       return;
     }
 
-    // A completed HTTP response proves Supabase itself is reachable.
-    // Give a useful permission/configuration message instead of reporting a network failure.
+    // 401/403 can be expected before sign-in because RLS protects student data.
+    // It still proves that the browser reached Supabase successfully.
     if(r.status === 401 || r.status === 403){
-      throw new Error(
-        'Supabase is reachable, but Data API permission is not ready yet (HTTP ' +
-        r.status + '). Run the Phoenix Academy GRANT patch in SQL Editor.'
-      );
+      if(el) el.innerHTML =
+        '<span class="good">✓ Supabase is reachable (security is protecting student data until sign-in).</span>';
+      return;
     }
 
     throw new Error(
-      'Supabase responded with HTTP ' + r.status +
+      'Supabase replied with HTTP ' + r.status +
       (bodyText ? ': ' + bodyText.slice(0,180) : '')
     );
 
   }catch(e){
-    console.error('Supabase connection test:',e);
+    console.error('Supabase connection test:', e);
     if(el){
-      const networkFailure = e instanceof TypeError && /fetch/i.test(e.message||'');
-      el.innerHTML = networkFailure
-        ? '<span class="bad">✕ Browser could not reach the Supabase endpoint. Check the project URL and internet connection.</span>'
-        : '<span class="bad">✕ ' + friendlySBError(e) + '</span>';
+      el.innerHTML =
+        '<span class="bad">✕ Connection test failed: ' +
+        (e?.message || 'Unknown browser/network error') +
+        '</span>';
     }
   }
 }
-
 async function registerStudent(){
   const msg=document.getElementById('registerMessage');
   const display_name=document.getElementById('registerName').value.trim();
