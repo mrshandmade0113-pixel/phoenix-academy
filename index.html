@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Phoenix Academy Year 8 V14.3</title>
+<title>Phoenix Academy Year 8 V14.4</title>
 <style>
 :root{--navy:#26344a;--mint:#a8dadc;--cream:#f7f4ee;--gold:#f2c66d;--green:#4f8068;--red:#b65a5a;--shadow:0 10px 28px rgba(38,52,74,.12)}
 *{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;color:var(--navy);background:linear-gradient(135deg,#f7f4ee,#eef6f7,#f7eef4)}
@@ -176,7 +176,7 @@ main{
   </div>
 </div>
 
-<header><div class="wrap"><h1>🔥 Phoenix Academy — Year 8 • V14.3</h1><div class="sub">180 challenging questions • 20 per subject • weekly exams • progress tracking</div>
+<header><div class="wrap"><h1>🔥 Phoenix Academy — Year 8 • V14.4</h1><div class="sub">180 challenging questions • 20 per subject • weekly exams • progress tracking</div>
 <nav><button class="active" data-page="home">Home</button><button data-page="learning">Learning Corner</button><button data-page="practice">Subject Practice</button><button data-page="weekly">Weekly Test</button><button data-page="listening">French Listening</button><button data-page="frenchreading">French Comprehension</button><button data-page="savecentre">Save & Backup</button><button data-page="dashboard">Dashboard</button></nav>
     <div class="student-bar" id="studentBar" style="display:none">
       <span class="student-pill" id="studentWelcome">Welcome</span>
@@ -1448,6 +1448,37 @@ function clearFrenchReading(){
 }
 
 readDifficulty.onchange=()=>{readSet.value='1';currentFrenchReading=null;frenchReadingArea.innerHTML='';frenchReadingResult.innerHTML='';};
+</script>
+
+
+<script>
+/* V14.4 — Subject Practice count fix
+   The original Ratio topic had only one question, so choosing 20 could only render one.
+   V14.4 gives Maths Ratio a full bank of 20 genuinely different GCSE-style questions. */
+BANK.Maths = BANK.Maths.filter(q => q.topic !== 'Ratio').concat([{"topic": "Ratio", "type": "numeric", "q": "Share £315 in the ratio 2:3:4. Give the largest share.", "marks": 4, "answer": "140"}, {"topic": "Ratio", "type": "numeric", "q": "Share £420 in the ratio 3:4:5. Give the largest share.", "marks": 4, "answer": "175"}, {"topic": "Ratio", "type": "numeric", "q": "Share £288 in the ratio 1:3:4. Give the middle share.", "marks": 4, "answer": "108"}, {"topic": "Ratio", "type": "numeric", "q": "Two people share £360 in the ratio 5:7. How much does the second person receive?", "marks": 4, "answer": "210"}, {"topic": "Ratio", "type": "numeric", "q": "Red, blue and green counters are in the ratio 2:5:3. There are 80 counters altogether. How many are blue?", "marks": 4, "answer": "40"}, {"topic": "Ratio", "type": "numeric", "q": "A recipe uses flour and sugar in the ratio 5:2. If 350 g of flour is used, how much sugar is needed?", "marks": 4, "answer": "140"}, {"topic": "Ratio", "type": "numeric", "q": "The ratio of boys to girls in a club is 3:5. There are 24 boys. How many girls are there?", "marks": 4, "answer": "40"}, {"topic": "Ratio", "type": "numeric", "q": "Orange juice and water are mixed in the ratio 2:7. If 630 ml of water is used, how much orange juice is needed?", "marks": 4, "answer": "180"}, {"topic": "Ratio", "type": "numeric", "q": "A map scale is 1:50,000. Two places are 6 cm apart on the map. What is the real distance in kilometres?", "marks": 5, "answer": "3"}, {"topic": "Ratio", "type": "numeric", "q": "The ratio of adults to children at an event is 7:4. There are 121 people altogether. How many are children?", "marks": 4, "answer": "44"}, {"topic": "Ratio", "type": "numeric", "q": "A bag contains red and yellow beads in the ratio 4:9. There are 52 beads altogether. How many are red?", "marks": 4, "answer": "16"}, {"topic": "Ratio", "type": "numeric", "q": "Paint is mixed red:blue:white in the ratio 3:2:5. A total of 4 litres is made. How many litres are white?", "marks": 5, "answer": "2"}, {"topic": "Ratio", "type": "numeric", "q": "The ratio of cats to dogs at a shelter is 5:8. There are 32 dogs. How many cats are there?", "marks": 4, "answer": "20"}, {"topic": "Ratio", "type": "numeric", "q": "A class has boys:girls = 7:9. If there are 48 pupils altogether, how many are boys?", "marks": 4, "answer": "21"}, {"topic": "Ratio", "type": "numeric", "q": "Divide 540 in the ratio 2:3:4. Find the difference between the largest and smallest shares.", "marks": 5, "answer": "120"}, {"topic": "Ratio", "type": "numeric", "q": "A drink is made using concentrate and water in the ratio 1:6. How much water is needed for 250 ml of concentrate?", "marks": 4, "answer": "1500"}, {"topic": "Ratio", "type": "numeric", "q": "The ratio x:y is 4:7. If x = 36, find y.", "marks": 3, "answer": "63"}, {"topic": "Ratio", "type": "numeric", "q": "The ratio a:b:c is 2:3:6. If c = 54, find a + b.", "marks": 4, "answer": "45"}, {"topic": "Ratio", "type": "numeric", "q": "A school spends money on books, computers and sports in the ratio 5:8:3. If £9,600 is spent altogether, how much is spent on computers?", "marks": 5, "answer": "4800"}, {"topic": "Ratio", "type": "numeric", "q": "The ratio of wins to losses for a team is 7:3. If the team played 50 games, how many games did it win?", "marks": 4, "answer": "35"}]);
+
+/* Make the generator report the real situation instead of silently showing fewer questions. */
+const V14_4_buildPractice = buildPractice;
+buildPractice = function(){
+  const s=practiceSubject.value, t=topicFilter.value, n=+questionCount.value;
+  const pool=BANK[s].filter(q=>t==='all'||q.topic===t);
+  if(pool.length < n){
+    current.practice=pool.map((q,i)=>({...q,id:'p'+i,subject:s}));
+    render('practiceArea',current.practice);
+    loadSaved('practice');
+    const area=document.getElementById('practiceArea');
+    area.insertAdjacentHTML('afterbegin',
+      `<div class="panel"><strong>${pool.length} question${pool.length===1?'':'s'} available for this topic.</strong>
+      Choose <em>All topics</em> for a larger mixed set.</div>`);
+    return;
+  }
+  current.practice=pool.slice(0,n).map((q,i)=>({...q,id:'p'+i,subject:s}));
+  render('practiceArea',current.practice);
+  loadSaved('practice');
+};
+
+/* Refresh topics so the expanded Ratio bank is immediately available. */
+syncTopics();
 </script>
 
 </body></html>
