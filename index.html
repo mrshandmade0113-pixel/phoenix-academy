@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Phoenix Academy Year 8 V14.5</title>
+<title>Phoenix Academy Year 8 V14.6</title>
 <style>
 :root{--navy:#26344a;--mint:#a8dadc;--cream:#f7f4ee;--gold:#f2c66d;--green:#4f8068;--red:#b65a5a;--shadow:0 10px 28px rgba(38,52,74,.12)}
 *{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;color:var(--navy);background:linear-gradient(135deg,#f7f4ee,#eef6f7,#f7eef4)}
@@ -176,7 +176,7 @@ main{
   </div>
 </div>
 
-<header><div class="wrap"><h1>🔥 Phoenix Academy — Year 8 • V14.5</h1><div class="sub">180 challenging questions • 20 per subject • weekly exams • progress tracking</div>
+<header><div class="wrap"><h1>🔥 Phoenix Academy — Year 8 • V14.6</h1><div class="sub">180 challenging questions • 20 per subject • weekly exams • progress tracking</div>
 <nav><button class="active" data-page="home">Home</button><button data-page="learning">Learning Corner</button><button data-page="practice">Subject Practice</button><button data-page="weekly">Weekly Test</button><button data-page="listening">French Listening</button><button data-page="frenchreading">French Comprehension</button><button data-page="savecentre">Save & Backup</button><button data-page="dashboard">Dashboard</button></nav>
     <div class="student-bar" id="studentBar" style="display:none">
       <span class="student-pill" id="studentWelcome">Welcome</span>
@@ -1530,6 +1530,142 @@ buildPractice=function(){
 };
 
 syncTopics();
+</script>
+
+
+<script>
+/* =========================================================
+   V14.6 — Subject Practice exact question-count fix
+   Applies to ALL subjects.
+   - 5 / 10 / 15 / 20 always means exactly that many questions
+     when the subject bank contains enough unique questions.
+   - If a selected topic has too few questions, use all unique
+     questions from that topic first, then fill the remaining
+     places with other unique questions from the SAME SUBJECT.
+   - No duplicate question text in one generated practice set.
+   ========================================================= */
+
+function v14_6_shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function v14_6_uniqueByQuestion(arr){
+  const seen=new Set();
+  return arr.filter(q=>{
+    const key=String(q.q||'').trim().toLowerCase();
+    if(!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function v14_6_refreshCounts(){
+  const s=practiceSubject.value;
+  const subjectPool=v14_6_uniqueByQuestion(BANK[s]||[]);
+  const options=[5,10,15,20].filter(x=>x<=subjectPool.length);
+  if(!options.length && subjectPool.length) options.push(subjectPool.length);
+
+  const old=+questionCount.value||20;
+  questionCount.innerHTML=options.map(x=>`<option value="${x}">${x}</option>`).join('');
+  if(options.length){
+    questionCount.value=String(options.includes(old)?old:options[options.length-1]);
+  }
+}
+
+function v14_6_syncTopics(){
+  const s=practiceSubject.value;
+  const subjectPool=v14_6_uniqueByQuestion(BANK[s]||[]);
+  const topics=[...new Set(subjectPool.map(x=>x.topic))];
+
+  topicFilter.innerHTML=
+    `<option value="all">All topics (${subjectPool.length})</option>`+
+    topics.map(t=>{
+      const c=v14_6_uniqueByQuestion(subjectPool.filter(q=>q.topic===t)).length;
+      return `<option value="${t}">${t} (${c})</option>`;
+    }).join('');
+
+  v14_6_refreshCounts();
+}
+
+function v14_6_buildPractice(){
+  const s=practiceSubject.value;
+  const t=topicFilter.value;
+  const requested=+questionCount.value;
+
+  const subjectPool=v14_6_uniqueByQuestion(BANK[s]||[]);
+  if(!subjectPool.length){
+    practiceArea.innerHTML='<div class="panel"><strong>No questions are available for this subject.</strong></div>';
+    return;
+  }
+
+  let chosen=[];
+  let topicCount=0;
+  let supplemented=0;
+
+  if(t==='all'){
+    chosen=v14_6_shuffle(subjectPool).slice(0,Math.min(requested,subjectPool.length));
+  } else {
+    const selectedTopic=v14_6_uniqueByQuestion(subjectPool.filter(q=>q.topic===t));
+    const otherTopics=v14_6_uniqueByQuestion(subjectPool.filter(q=>q.topic!==t));
+
+    const primary=v14_6_shuffle(selectedTopic).slice(0,Math.min(requested,selectedTopic.length));
+    topicCount=primary.length;
+    chosen=[...primary];
+
+    if(chosen.length<requested){
+      const need=requested-chosen.length;
+      const extras=v14_6_shuffle(otherTopics).slice(0,need);
+      chosen.push(...extras);
+      supplemented=extras.length;
+    }
+  }
+
+  chosen=v14_6_uniqueByQuestion(chosen).slice(0,requested);
+
+  current.practice=chosen.map((q,i)=>({...q,id:'p'+i,subject:s}));
+  render('practiceArea',current.practice);
+  loadSaved('practice');
+
+  let message='';
+  if(t!=='all' && supplemented>0){
+    message=`<div class="panel">
+      <strong>✓ ${current.practice.length} questions generated.</strong>
+      <p>This topic currently contains ${topicCount} unique question${topicCount===1?'':'s'}.
+      To honour your selected total of ${requested}, Phoenix Academy added
+      ${supplemented} different GCSE-style question${supplemented===1?'':'s'}
+      from other <strong>${s}</strong> topics. No question is duplicated in this set.</p>
+    </div>`;
+  } else {
+    message=`<div class="panel">
+      <strong>✓ ${current.practice.length} different question${current.practice.length===1?'':'s'} generated.</strong>
+    </div>`;
+  }
+
+  practiceArea.insertAdjacentHTML('afterbegin',message);
+}
+
+/* Override every earlier Subject Practice handler/fix. */
+syncTopics=v14_6_syncTopics;
+buildPractice=v14_6_buildPractice;
+
+practiceSubject.onchange=()=>{
+  v14_6_syncTopics();
+  practiceArea.innerHTML='';
+};
+
+topicFilter.onchange=()=>{
+  v14_6_refreshCounts();
+  practiceArea.innerHTML='';
+};
+
+/* Keep 5/10/15/20 based on the full subject bank,
+   rather than reducing the count because one narrow topic is small. */
+v14_6_syncTopics();
 </script>
 
 </body></html>
