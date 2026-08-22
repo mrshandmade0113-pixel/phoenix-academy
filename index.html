@@ -41,7 +41,7 @@ main{padding:24px 15px 70px}.page{display:none}.page.active{display:block}.panel
 .small-note{font-size:.9rem;color:#66758a}
 .backup-box{width:100%;min-height:150px;font-family:monospace}
 
-/* Supabase multi-student V11.2 */
+/* Supabase multi-student V11.3 */
 #authGate{
   position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#26344a,#415a78);
   display:flex;align-items:center;justify-content:center;padding:20px;color:#26344a
@@ -122,9 +122,9 @@ main{
 
         <details class="auth-advanced">
           <summary><strong>Supabase cloud connection</strong></summary>
-          <p class="small-note">Hosted Supabase project: <code>https://mqfsptsvypqsrtrcnyau.supabase.co</code>. No PocketBase, ngrok, or CMD window is required.</p>
+          <p class="small-note">Hosted Supabase project: <code>https://mqfsptsvypqsrrtcnyau.supabase.co</code>. No PocketBase, ngrok, or CMD window is required.</p>
           <button class="btn secondary" onclick="testSupabaseConnection()">Test connection</button>
-          <div id="pbConnectionMessage" class="auth-message">Ready to test V11.2 browser connection.</div>
+          <div id="pbConnectionMessage" class="auth-message">Ready to test V11.3 browser connection.</div>
         </details>
       </div>
     </div>
@@ -623,7 +623,7 @@ setTimeout(refreshSaveSummary,300);
    RLS restricts every student to their own rows.
    ========================================================== */
 
-const SUPABASE_URL = 'https://mqfsptsvypqsrtrcnyau.supabase.co';
+const SUPABASE_URL = 'https://mqfsptsvypqsrrtcnyau.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_xbnAsTPtUy9eyZrg_iEOKw_68FtDWE6';
 
 let sbSession = (() => {
