@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Phoenix Academy Year 8 V14.6</title>
+<title>Phoenix Academy Year 8 V14.7</title>
 <style>
 :root{--navy:#26344a;--mint:#a8dadc;--cream:#f7f4ee;--gold:#f2c66d;--green:#4f8068;--red:#b65a5a;--shadow:0 10px 28px rgba(38,52,74,.12)}
 *{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;color:var(--navy);background:linear-gradient(135deg,#f7f4ee,#eef6f7,#f7eef4)}
@@ -176,7 +176,7 @@ main{
   </div>
 </div>
 
-<header><div class="wrap"><h1>🔥 Phoenix Academy — Year 8 • V14.6</h1><div class="sub">180 challenging questions • 20 per subject • weekly exams • progress tracking</div>
+<header><div class="wrap"><h1>🔥 Phoenix Academy — Year 8 • V14.7</h1><div class="sub">180 challenging questions • 20 per subject • weekly exams • progress tracking</div>
 <nav><button class="active" data-page="home">Home</button><button data-page="learning">Learning Corner</button><button data-page="practice">Subject Practice</button><button data-page="weekly">Weekly Test</button><button data-page="listening">French Listening</button><button data-page="frenchreading">French Comprehension</button><button data-page="savecentre">Save & Backup</button><button data-page="dashboard">Dashboard</button></nav>
     <div class="student-bar" id="studentBar" style="display:none">
       <span class="student-pill" id="studentWelcome">Welcome</span>
@@ -1666,6 +1666,71 @@ topicFilter.onchange=()=>{
 /* Keep 5/10/15/20 based on the full subject bank,
    rather than reducing the count because one narrow topic is small. */
 v14_6_syncTopics();
+</script>
+
+
+<script>
+/* =========================================================
+   V14.7 — French Subject Practice becomes translation practice
+   Two clear modes:
+   • English → French
+   • French → English
+   20 unique GCSE-style translation questions in each direction.
+   ========================================================= */
+
+BANK.French = [{"topic": "English → French", "type": "fill", "q": "Translate into French: I like science because it is interesting.", "marks": 3, "answer": "J'aime les sciences parce que c'est intéressant.", "accept": ["J’aime les sciences parce que c’est intéressant.", "J'aime la science parce que c'est intéressant."]}, {"topic": "English → French", "type": "fill", "q": "Translate into French: My favourite subject is history.", "marks": 2, "answer": "Ma matière préférée est l'histoire.", "accept": ["Ma matière préférée, c'est l'histoire."]}, {"topic": "English → French", "type": "fill", "q": "Translate into French: I play football twice a week.", "marks": 2, "answer": "Je joue au football deux fois par semaine.", "accept": ["Je fais du football deux fois par semaine."]}, {"topic": "English → French", "type": "fill", "q": "Translate into French: Yesterday I watched a film with my friends.", "marks": 3, "answer": "Hier, j'ai regardé un film avec mes amis.", "accept": ["Hier j'ai regardé un film avec mes amis."]}, {"topic": "English → French", "type": "fill", "q": "Translate into French: Next weekend I am going to visit my grandparents.", "marks": 3, "answer": "Le week-end prochain, je vais rendre visite à mes grands-parents.", "accept": ["Le week-end prochain je vais rendre visite à mes grands-parents.", "Le weekend prochain, je vais rendre visite à mes grands-parents."]}, {"topic": "English → French", "type": "fill", "q": "Translate into French: There is a swimming pool near my house.", "marks": 2, "answer": "Il y a une piscine près de chez moi.", "accept": ["Il y a une piscine près de ma maison."]}, {"topic": "English → French", "type": "fill", "q": "Translate into French: I do not like maths because it is difficult.", "marks": 3, "answer": "Je n'aime pas les maths parce que c'est difficile.", "accept": ["Je n’aime pas les maths parce que c’est difficile."]}, {"topic": "English → French", "type": "fill", "q": "Translate into French: I get up at seven o'clock every morning.", "marks": 3, "answer": "Je me lève à sept heures tous les matins.", "accept": ["Je me lève à sept heures chaque matin."]}, {"topic": "English → French", "type": "fill", "q": "Translate into French: We went to Spain by plane last summer.", "marks": 3, "answer": "Nous sommes allés en Espagne en avion l'été dernier.", "accept": ["On est allé en Espagne en avion l'été dernier.", "Nous sommes allées en Espagne en avion l'été dernier."]}, {"topic": "English → French", "type": "fill", "q": "Translate into French: I would like to be a doctor in the future.", "marks": 3, "answer": "Je voudrais être médecin à l'avenir.", "accept": ["Je voudrais devenir médecin à l'avenir.", "Plus tard, je voudrais être médecin."]}, {"topic": "English → French", "type": "fill", "q": "Translate into French: My brother is taller than me.", "marks": 2, "answer": "Mon frère est plus grand que moi.", "accept": []}, {"topic": "English → French", "type": "fill", "q": "Translate into French: I have to do my homework before dinner.", "marks": 3, "answer": "Je dois faire mes devoirs avant le dîner.", "accept": ["Je dois faire mes devoirs avant de dîner."]}, {"topic": "English → French", "type": "fill", "q": "Translate into French: When it is sunny, I like going to the park.", "marks": 3, "answer": "Quand il fait beau, j'aime aller au parc.", "accept": ["Quand il y a du soleil, j'aime aller au parc."]}, {"topic": "English → French", "type": "fill", "q": "Translate into French: I have lived here for three years.", "marks": 3, "answer": "J'habite ici depuis trois ans.", "accept": ["J’habite ici depuis trois ans.", "Je vis ici depuis trois ans."]}, {"topic": "English → French", "type": "fill", "q": "Translate into French: Last Saturday we ate in an Italian restaurant.", "marks": 3, "answer": "Samedi dernier, nous avons mangé dans un restaurant italien.", "accept": ["Samedi dernier nous avons mangé dans un restaurant italien."]}, {"topic": "English → French", "type": "fill", "q": "Translate into French: I use my phone to send messages.", "marks": 3, "answer": "J'utilise mon portable pour envoyer des messages.", "accept": ["J'utilise mon téléphone pour envoyer des messages."]}, {"topic": "English → French", "type": "fill", "q": "Translate into French: I think social media can be useful.", "marks": 3, "answer": "Je pense que les réseaux sociaux peuvent être utiles.", "accept": ["À mon avis, les réseaux sociaux peuvent être utiles."]}, {"topic": "English → French", "type": "fill", "q": "Translate into French: If I had more time, I would do more sport.", "marks": 4, "answer": "Si j'avais plus de temps, je ferais plus de sport.", "accept": ["Si j'avais davantage de temps, je ferais plus de sport."]}, {"topic": "English → French", "type": "fill", "q": "Translate into French: We should protect the environment.", "marks": 3, "answer": "Nous devrions protéger l'environnement.", "accept": ["On devrait protéger l'environnement."]}, {"topic": "English → French", "type": "fill", "q": "Translate into French: Although it was raining, we went into town.", "marks": 4, "answer": "Bien qu'il pleuve, nous sommes allés en ville.", "accept": ["Même s'il pleuvait, nous sommes allés en ville.", "Même s'il pleuvait, on est allé en ville."]}, {"topic": "French → English", "type": "fill", "q": "Translate into English: J'adore lire parce que c'est relaxant.", "marks": 2, "answer": "I love reading because it is relaxing.", "accept": ["I love to read because it is relaxing."]}, {"topic": "French → English", "type": "fill", "q": "Translate into English: Ma sœur a quinze ans.", "marks": 2, "answer": "My sister is fifteen years old.", "accept": ["My sister is 15 years old.", "My sister is fifteen."]}, {"topic": "French → English", "type": "fill", "q": "Translate into English: Nous allons au collège en bus.", "marks": 2, "answer": "We go to school by bus.", "accept": ["We go to secondary school by bus."]}, {"topic": "French → English", "type": "fill", "q": "Translate into English: Hier, j'ai fait mes devoirs après le dîner.", "marks": 3, "answer": "Yesterday, I did my homework after dinner.", "accept": ["Yesterday I did my homework after dinner."]}, {"topic": "French → English", "type": "fill", "q": "Translate into English: Demain, je vais jouer au tennis.", "marks": 2, "answer": "Tomorrow, I am going to play tennis.", "accept": ["Tomorrow I am going to play tennis.", "Tomorrow, I'm going to play tennis."]}, {"topic": "French → English", "type": "fill", "q": "Translate into English: Il n'y a pas de cinéma dans mon village.", "marks": 3, "answer": "There is no cinema in my village.", "accept": ["There isn't a cinema in my village.", "There is not a cinema in my village."]}, {"topic": "French → English", "type": "fill", "q": "Translate into English: Je préfère les sciences aux maths.", "marks": 2, "answer": "I prefer science to maths.", "accept": ["I prefer sciences to maths.", "I prefer science to math."]}, {"topic": "French → English", "type": "fill", "q": "Translate into English: Je me couche vers dix heures et demie.", "marks": 3, "answer": "I go to bed at about half past ten.", "accept": ["I go to bed around 10:30.", "I go to bed at around half past ten."]}, {"topic": "French → English", "type": "fill", "q": "Translate into English: L'été dernier, nous avons visité Paris.", "marks": 2, "answer": "Last summer, we visited Paris.", "accept": ["Last summer we visited Paris."]}, {"topic": "French → English", "type": "fill", "q": "Translate into English: Plus tard, j'aimerais travailler à l'étranger.", "marks": 3, "answer": "Later, I would like to work abroad.", "accept": ["In the future, I would like to work abroad.", "Later I'd like to work abroad."]}, {"topic": "French → English", "type": "fill", "q": "Translate into English: Mon père travaille plus que ma mère.", "marks": 3, "answer": "My father works more than my mother.", "accept": ["My dad works more than my mum.", "My father works more than my mum."]}, {"topic": "French → English", "type": "fill", "q": "Translate into English: Il faut manger plus de fruits et de légumes.", "marks": 3, "answer": "You must eat more fruit and vegetables.", "accept": ["You should eat more fruit and vegetables.", "It is necessary to eat more fruit and vegetables."]}, {"topic": "French → English", "type": "fill", "q": "Translate into English: Quand il fait froid, je reste à la maison.", "marks": 2, "answer": "When it is cold, I stay at home.", "accept": ["When it's cold, I stay at home."]}, {"topic": "French → English", "type": "fill", "q": "Translate into English: J'apprends le français depuis deux ans.", "marks": 3, "answer": "I have been learning French for two years.", "accept": ["I have studied French for two years.", "I've been learning French for two years."]}, {"topic": "French → English", "type": "fill", "q": "Translate into English: Nous sommes arrivés tard à cause de la circulation.", "marks": 3, "answer": "We arrived late because of the traffic.", "accept": ["We arrived late due to the traffic."]}, {"topic": "French → English", "type": "fill", "q": "Translate into English: J'utilise Internet afin de faire des recherches.", "marks": 3, "answer": "I use the Internet in order to do research.", "accept": ["I use the Internet to do research.", "I use the internet for research."]}, {"topic": "French → English", "type": "fill", "q": "Translate into English: À mon avis, les uniformes scolaires sont pratiques.", "marks": 3, "answer": "In my opinion, school uniforms are practical.", "accept": ["I think school uniforms are practical."]}, {"topic": "French → English", "type": "fill", "q": "Translate into English: Si j'étais riche, je voyagerais autour du monde.", "marks": 4, "answer": "If I were rich, I would travel around the world.", "accept": ["If I was rich, I would travel around the world."]}, {"topic": "French → English", "type": "fill", "q": "Translate into English: On devrait utiliser davantage les transports en commun.", "marks": 3, "answer": "We should use public transport more.", "accept": ["People should use public transport more.", "We should use more public transport."]}, {"topic": "French → English", "type": "fill", "q": "Translate into English: Même si le travail est difficile, je le trouve intéressant.", "marks": 4, "answer": "Even though the work is difficult, I find it interesting.", "accept": ["Although the work is difficult, I find it interesting."]}];
+
+/* Accent/punctuation-tolerant comparison, with accepted alternatives.
+   This leaves all non-French practice behaviour unchanged. */
+function v14_7_normTranslation(s){
+  return String(s||'')
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[’‘]/g,"'")
+    .replace(/[^a-z0-9' ]/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+const V14_7_markCurrent = markCurrent;
+markCurrent = function(mode){
+  const qs=current[mode];
+  if(!qs.length) return alert('Generate questions first.');
+
+  const isFrenchTranslation =
+    mode==='practice' &&
+    qs.every(q=>q.subject==='French' && q.type==='fill' && Array.isArray(q.accept));
+
+  if(!isFrenchTranslation) return V14_7_markCurrent(mode);
+
+  let earned=0,total=0;
+  qs.forEach(q=>{
+    total+=q.marks;
+    const user=v14_7_normTranslation(answer(q));
+    const accepted=[q.answer,...(q.accept||[])].map(v14_7_normTranslation);
+    const correct=user && accepted.includes(user);
+    const score=correct?q.marks:0;
+    earned+=score;
+    document.getElementById(q.id+'_fb').innerHTML = correct
+      ? `<span class="good">Correct. ${score}/${q.marks}</span>`
+      : `<span class="bad">Suggested answer: ${q.answer}</span>`;
+  });
+
+  const pct=Math.round(earned/total*100);
+  const level=pct>=85?'Greater Depth':pct>=70?'Secure Plus':pct>=55?'Secure':'Developing';
+  document.getElementById(mode+'Result').innerHTML=
+    `<div class="panel"><h2>${level}: ${earned}/${total} (${pct}%)</h2>
+    <p>Translation marking accepts the model answer plus several natural alternatives and ignores accents/capitalisation for marking.</p></div>`;
+
+  const r=JSON.parse(localStorage.getItem('phoenixResults')||'{}');
+  r.French=r.French||[];
+  r.French.push({pct,date:new Date().toLocaleDateString()});
+  localStorage.setItem('phoenixResults',JSON.stringify(r));
+  if(typeof scheduleCloudSync==='function') scheduleCloudSync();
+};
+
+/* Refresh Subject Practice if French is currently selected. */
+if(practiceSubject.value==='French') syncTopics();
 </script>
 
 </body></html>
